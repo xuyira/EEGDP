@@ -7,3 +7,6 @@
 
 logs/
 TimeDP-Data/
+
+*.tar.gz
+*.Identifier

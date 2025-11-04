@@ -67,16 +67,16 @@ data:
     data_path_dict:
       solar: "{DATA_ROOT}/solar_{SEQ_LEN}_train.npy"
       electricity: "{DATA_ROOT}/electricity_{SEQ_LEN}_train.npy"
-      traffic: "{DATA_ROOT}/traffic_{SEQ_LEN}_train.npy"
-      kddcup: "{DATA_ROOT}/kddcup_{SEQ_LEN}_train.npy"
-      taxi: "{DATA_ROOT}/taxi_{SEQ_LEN}_train.npy"
-      exchange: "{DATA_ROOT}/exchange_{SEQ_LEN}_train.npy"
-      fred_md: "{DATA_ROOT}/fred_md_{SEQ_LEN}_train.npy"
-      nn5: "{DATA_ROOT}/nn5_{SEQ_LEN}_train.npy"
-      temp: "{DATA_ROOT}/temp_{SEQ_LEN}_train.npy"
-      rain: "{DATA_ROOT}/rain_{SEQ_LEN}_train.npy"
-      pedestrian: "{DATA_ROOT}/pedestrian_{SEQ_LEN}_train.npy"
-      wind_4_seconds: "{DATA_ROOT}/wind_4_seconds_{SEQ_LEN}_train.npy"
+      #traffic: "{DATA_ROOT}/traffic_{SEQ_LEN}_train.npy"
+      #kddcup: "{DATA_ROOT}/kddcup_{SEQ_LEN}_train.npy"
+      #taxi: "{DATA_ROOT}/taxi_{SEQ_LEN}_train.npy"
+      #exchange: "{DATA_ROOT}/exchange_{SEQ_LEN}_train.npy"
+      #fred_md: "{DATA_ROOT}/fred_md_{SEQ_LEN}_train.npy"
+      #nn5: "{DATA_ROOT}/nn5_{SEQ_LEN}_train.npy"
+      #temp: "{DATA_ROOT}/temp_{SEQ_LEN}_train.npy"
+      #rain: "{DATA_ROOT}/rain_{SEQ_LEN}_train.npy"
+      #pedestrian: "{DATA_ROOT}/pedestrian_{SEQ_LEN}_train.npy"
+      #wind_4_seconds: "{DATA_ROOT}/wind_4_seconds_{SEQ_LEN}_train.npy"
     window: *seqlen
     val_portion: 0.1
     batch_size: 256
