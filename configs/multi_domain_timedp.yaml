@@ -119,7 +119,7 @@ data:
     num_workers: 8
     normalize: centered_pit
     drop_last: True
-    reweight: True
+    reweight: False #True
     input_channels: 1
 
 lightning:
