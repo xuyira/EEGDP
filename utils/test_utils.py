@@ -32,7 +32,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
             
         x = torch.tensor(dataset_samples).to('cuda').float().unsqueeze(1)[:num_dp]
         c, mask = model.get_learned_conditioning(x, return_mask=True)
-        repeats = int(50 / num_dp) if not opt.debug else 1
+        repeats = int(20 / num_dp) if not opt.debug else 1
 
         if c is None:
             mask_repeat = None
