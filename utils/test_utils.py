@@ -30,7 +30,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
     save_path = Path(logdir) / 'generated_samples'
     save_path.mkdir(exist_ok=True, parents=True)
     seq_len = data.window
-    num_dp = 10  # number of samples for constructingdomain prompts,100
+    num_dp = 50  # number of samples for constructingdomain prompts,100
     all_metrics = {}
     for dataset in data.norm_train_dict:
         dataset_data = TSGDataset({dataset: data.norm_train_dict[dataset]})
@@ -41,7 +41,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
             
         x = torch.tensor(dataset_samples, device=device).float().unsqueeze(1)[:num_dp]
         c, mask = model.get_learned_conditioning(x, return_mask=True)
-        repeats = int(10 / num_dp) if not opt.debug else 1 #1000
+        repeats = int(50 / num_dp) if not opt.debug else 1 #1000
 
         if c is None:
             mask_repeat = None
@@ -55,7 +55,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
 
         all_gen = []
         for _ in range(1 if not opt.debug else 1):  # iterate to reduce maximum memory usage
-            samples, _ = model.sample_log(cond=cond, batch_size=500 if not opt.debug else 100, ddim=False, cfg_scale=1, mask=mask_repeat)
+            samples, _ = model.sample_log(cond=cond, batch_size=50 if not opt.debug else 100, ddim=False, cfg_scale=1, mask=mask_repeat)
             norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
             inv_samples = data.inverse_transform(norm_samples, data_name=dataset)
             all_gen.append(inv_samples)
@@ -91,8 +91,8 @@ def test_model_uncond(model, data, trainer, opt, logdir):
     for dataset in data.norm_train_dict:            
 
         all_gen = []
-        for _ in range(1 if not opt.debug else 1):
-            samples, _ = model.sample_log(cond=None, batch_size=10 if not opt.debug else 100, ddim=False, cfg_scale=1)
+        for _ in range(5 if not opt.debug else 1):
+            samples, _ = model.sample_log(cond=None, batch_size=1000 if not opt.debug else 100, ddim=False, cfg_scale=1)
             norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
             inv_samples = data.inverse_transform(norm_samples, data_name=dataset)
             all_gen.append(inv_samples)
