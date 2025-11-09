@@ -21,7 +21,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
     save_path = Path(logdir) / 'generated_samples'
     save_path.mkdir(exist_ok=True, parents=True)
     seq_len = data.window
-    num_dp = 20  # number of samples for constructingdomain prompts
+    num_dp = 10  # number of samples for constructingdomain prompts
     all_metrics = {}
     for dataset in data.norm_train_dict:
         dataset_data = TSGDataset({dataset: data.norm_train_dict[dataset]})
@@ -32,7 +32,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
             
         x = torch.tensor(dataset_samples).to('cuda').float().unsqueeze(1)[:num_dp]
         c, mask = model.get_learned_conditioning(x, return_mask=True)
-        repeats = int(200 / num_dp) if not opt.debug else 1
+        repeats = int(50 / num_dp) if not opt.debug else 1
 
         if c is None:
             mask_repeat = None
