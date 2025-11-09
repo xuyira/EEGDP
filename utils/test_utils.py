@@ -16,7 +16,15 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
         best_ckpt_path = trainer.callbacks[-1].best_model_path
         print(f"Loading best model from {best_ckpt_path} for sampling")
         model.init_from_ckpt(best_ckpt_path)
-    device = trainer.strategy.root_device if trainer is not None else next(model.parameters()).device
+    if trainer is not None:
+        if hasattr(trainer, "strategy") and trainer.strategy is not None:
+            device = trainer.strategy.root_device
+        elif hasattr(trainer, "training_type_plugin") and trainer.training_type_plugin is not None:
+            device = trainer.training_type_plugin.root_device
+        else:
+            device = next(model.parameters()).device
+    else:
+        device = next(model.parameters()).device
     model = model.to(device)
     model.eval()
     save_path = Path(logdir) / 'generated_samples'
@@ -68,7 +76,15 @@ def test_model_uncond(model, data, trainer, opt, logdir):
         best_ckpt_path = trainer.callbacks[-1].best_model_path
         print(f"Loading best model from {best_ckpt_path} for sampling")
         model.init_from_ckpt(best_ckpt_path)
-    device = trainer.strategy.root_device if trainer is not None else next(model.parameters()).device
+    if trainer is not None:
+        if hasattr(trainer, "strategy") and trainer.strategy is not None:
+            device = trainer.strategy.root_device
+        elif hasattr(trainer, "training_type_plugin") and trainer.training_type_plugin is not None:
+            device = trainer.training_type_plugin.root_device
+        else:
+            device = next(model.parameters()).device
+    else:
+        device = next(model.parameters()).device
     model = model.to(device)
     model.eval()
     save_path = Path(logdir) / 'generated_samples'
