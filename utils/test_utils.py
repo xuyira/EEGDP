@@ -52,13 +52,10 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
         else:
             cond = torch.repeat_interleave(c, repeats, dim=0)
             mask_repeat = torch.repeat_interleave(mask, repeats, dim=0)
-        
-        sample_batch_size = 100 #1000
-        num_iters = 10 #5
 
         all_gen = []
-        for _ in range(num_iters if not opt.debug else 1):  # iterate to reduce maximum memory usage
-            samples, _ = model.sample_log(cond=cond, batch_size=sample_batch_size if not opt.debug else 100, ddim=False, cfg_scale=1, mask=mask_repeat)
+        for _ in range(1 if not opt.debug else 1):  # iterate to reduce maximum memory usage
+            samples, _ = model.sample_log(cond=cond, batch_size=500 if not opt.debug else 100, ddim=False, cfg_scale=1, mask=mask_repeat)
             norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
             inv_samples = data.inverse_transform(norm_samples, data_name=dataset)
             all_gen.append(inv_samples)
