@@ -29,7 +29,30 @@ dataset_name_map = {
     'bci2a_sub2_cls3': 'Sub2 Task3',
     'bci2a_sub2_cls4': 'Sub2 Task4',
 }
+#按类别分的
+dataset_color_map = {
+    'bci2a_sub1_cls1': 'tab:blue',
+    'bci2a_sub1_cls2': 'tab:green',
+    'bci2a_sub1_cls3': 'tab:orange',
+    'bci2a_sub1_cls4': 'tab:purple',
+    'bci2a_sub2_cls1': 'tab:blue',
+    'bci2a_sub2_cls2': 'tab:green',
+    'bci2a_sub2_cls3': 'tab:orange',
+    'bci2a_sub2_cls4': 'tab:purple',
+}
 
+dataset_domain_map = {
+    'bci2a_sub1_cls1': 'cls1',
+    'bci2a_sub1_cls2': 'cls2',
+    'bci2a_sub1_cls3': 'cls3',
+    'bci2a_sub1_cls4': 'cls4',
+    'bci2a_sub2_cls1': 'cls1',
+    'bci2a_sub2_cls2': 'cls2',
+    'bci2a_sub2_cls3': 'cls3',
+    'bci2a_sub2_cls4': 'cls4',
+}
+"""
+#按受试者分的
 dataset_color_map = {
     'bci2a_sub1_cls1': 'tab:blue',
     'bci2a_sub1_cls2': 'tab:blue',
@@ -51,6 +74,7 @@ dataset_domain_map = {
     'bci2a_sub2_cls3': 'Subject2',
     'bci2a_sub2_cls4': 'Subject2',
 }
+"""
 
 """
 mix_dataset = [
