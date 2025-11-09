@@ -78,9 +78,13 @@ def init_model_data_trainer(parser):
             config.model['params']['unet_config']['params']['use_pam'] = False
             
     nowname += f"_seed{opt.seed}"
-    logdir = os.path.join(opt.logdir, cfg_name, nowname)
-    ckptdir = os.path.join(logdir, "checkpoints")
-    cfgdir = os.path.join(logdir, "configs")
+    #logdir = os.path.join(opt.logdir, cfg_name, nowname)
+    #ckptdir = os.path.join(logdir, "checkpoints")
+    #cfgdir = os.path.join(logdir, "configs")
+
+    logdir = Path(opt.logdir) / cfg_name / nowname
+    ckptdir = logdir / "checkpoints"
+    cfgdir = logdir / "configs"
     
     metrics_dir = Path(logdir) / 'metric_dict.pkl'
     if metrics_dir.exists():
