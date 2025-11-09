@@ -16,7 +16,8 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
         best_ckpt_path = trainer.callbacks[-1].best_model_path
         print(f"Loading best model from {best_ckpt_path} for sampling")
         model.init_from_ckpt(best_ckpt_path)
-    model = model.cuda()
+    device = trainer.strategy.root_device if trainer is not None else next(model.parameters()).device
+    model = model.to(device)
     model.eval()
     save_path = Path(logdir) / 'generated_samples'
     save_path.mkdir(exist_ok=True, parents=True)
@@ -30,7 +31,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
             dataset_samples.append(dataset_data.__getitem__(idx)['context'])
         dataset_samples = np.vstack(dataset_samples)
             
-        x = torch.tensor(dataset_samples).to('cuda').float().unsqueeze(1)[:num_dp]
+        x = torch.tensor(dataset_samples, device=device).float().unsqueeze(1)[:num_dp]
         c, mask = model.get_learned_conditioning(x, return_mask=True)
         repeats = int(500 / num_dp) if not opt.debug else 1 #1000
 
@@ -67,7 +68,8 @@ def test_model_uncond(model, data, trainer, opt, logdir):
         best_ckpt_path = trainer.callbacks[-1].best_model_path
         print(f"Loading best model from {best_ckpt_path} for sampling")
         model.init_from_ckpt(best_ckpt_path)
-    model = model.cuda()
+    device = trainer.strategy.root_device if trainer is not None else next(model.parameters()).device
+    model = model.to(device)
     model.eval()
     save_path = Path(logdir) / 'generated_samples'
     save_path.mkdir(exist_ok=True, parents=True)
@@ -97,7 +99,8 @@ def zero_shot_k_repeat(samples, model, train_data_module, num_gen_samples=1000):
 
     norm_k_samples = data.transform(k_samples, normalizer=normalizer)
 
-    x = torch.tensor(norm_k_samples).float().to('cuda')
+    device = next(model.parameters()).device
+    x = torch.tensor(norm_k_samples, device=device).float()
     c, mask = model.get_learned_conditioning(x, return_mask=True)
 
     repeats = int(num_gen_samples / k)
