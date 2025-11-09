@@ -41,7 +41,7 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
             
         x = torch.tensor(dataset_samples, device=device).float().unsqueeze(1)[:num_dp]
         c, mask = model.get_learned_conditioning(x, return_mask=True)
-        repeats = int(100 / num_dp) if not opt.debug else 1 #1000
+        repeats = int(50 / num_dp) if not opt.debug else 1 #1000
 
         if c is None:
             mask_repeat = None
@@ -89,10 +89,10 @@ def test_model_uncond(model, data, trainer, opt, logdir):
     seq_len = data.window
     all_metrics = {}
     for dataset in data.norm_train_dict:            
-        
+
         all_gen = []
         for _ in range(1 if not opt.debug else 1):
-            samples, _ = model.sample_log(cond=None, batch_size=100 if not opt.debug else 100, ddim=False, cfg_scale=1)
+            samples, _ = model.sample_log(cond=None, batch_size=50 if not opt.debug else 100, ddim=False, cfg_scale=1)
             norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
             inv_samples = data.inverse_transform(norm_samples, data_name=dataset)
             all_gen.append(inv_samples)
