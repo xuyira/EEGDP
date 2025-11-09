@@ -7,7 +7,9 @@
 
 logs/
 TimeDP-Data/
+results/
 
 *.tar.gz
 *.Identifier
 *.log
+*.pdf
