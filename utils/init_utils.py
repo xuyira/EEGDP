@@ -233,11 +233,13 @@ def load_model_data(parser):
             
     
     nowname += f"_seed{opt.seed}"
-    logdir = os.path.join(opt.logdir, cfg_name, nowname)
+    #logdir = os.path.join(opt.logdir, cfg_name, nowname)
+    logdir = Path(opt.logdir) / cfg_name / nowname
+    ckptdir = logdir / "checkpoints"
     
     # model
     ckpt_name = opt.ckpt_name
-    ckpt_path = logdir / 'checkpoints' / f'{ckpt_name}.ckpt'
+    ckpt_path = ckptdir / f"{ckpt_name}.ckpt"
     config.model['params']['ckpt_path'] = ckpt_path
     model = instantiate_from_config(config.model)
 

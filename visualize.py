@@ -53,7 +53,6 @@ dataset_domain_map = {
 }
 
 """
-
 mix_dataset = [
         'electricity', 'solar', 'wind_4_seconds', 'traffic', 'taxi', 'pedestrian', 
         'kddcup', 'temp', 'rain', 'nn5', 'fred_md', 'exchange'
