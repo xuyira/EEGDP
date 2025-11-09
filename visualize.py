@@ -15,6 +15,46 @@ from utils.cli_utils import get_parser
 data_root = os.environ['DATA_ROOT']
 
 mix_dataset = [
+    'bci2a_sub1_cls1', 'bci2a_sub1_cls2', 'bci2a_sub1_cls3', 'bci2a_sub1_cls4',
+    'bci2a_sub2_cls1', 'bci2a_sub2_cls2', 'bci2a_sub2_cls3', 'bci2a_sub2_cls4'
+]
+
+dataset_name_map = {
+    'bci2a_sub1_cls1': 'Sub1 Task1',
+    'bci2a_sub1_cls2': 'Sub1 Task2',
+    'bci2a_sub1_cls3': 'Sub1 Task3',
+    'bci2a_sub1_cls4': 'Sub1 Task4',
+    'bci2a_sub2_cls1': 'Sub2 Task1',
+    'bci2a_sub2_cls2': 'Sub2 Task2',
+    'bci2a_sub2_cls3': 'Sub2 Task3',
+    'bci2a_sub2_cls4': 'Sub2 Task4',
+}
+
+dataset_color_map = {
+    'bci2a_sub1_cls1': 'tab:blue',
+    'bci2a_sub1_cls2': 'tab:blue',
+    'bci2a_sub1_cls3': 'tab:blue',
+    'bci2a_sub1_cls4': 'tab:blue',
+    'bci2a_sub2_cls1': 'tab:orange',
+    'bci2a_sub2_cls2': 'tab:orange',
+    'bci2a_sub2_cls3': 'tab:orange',
+    'bci2a_sub2_cls4': 'tab:orange',
+}
+
+dataset_domain_map = {
+    'bci2a_sub1_cls1': 'Subject1',
+    'bci2a_sub1_cls2': 'Subject1',
+    'bci2a_sub1_cls3': 'Subject1',
+    'bci2a_sub1_cls4': 'Subject1',
+    'bci2a_sub2_cls1': 'Subject2',
+    'bci2a_sub2_cls2': 'Subject2',
+    'bci2a_sub2_cls3': 'Subject2',
+    'bci2a_sub2_cls4': 'Subject2',
+}
+
+"""
+
+mix_dataset = [
         'electricity', 'solar', 'wind_4_seconds', 'traffic', 'taxi', 'pedestrian', 
         'kddcup', 'temp', 'rain', 'nn5', 'fred_md', 'exchange'
     ]
@@ -61,7 +101,8 @@ dataset_domain_map = {
     'fred_md': 'Econ',
     'exchange': 'Econ'
 }
-    
+"""
+
 def draw_domain_tsne_on_ax(ax1: plt.Axes, ax2: plt.Axes, all_repeat, num_dp=100):
     all_data = [x.cpu().numpy() for x in all_repeat]
     concat_data = np.concatenate(all_data, axis=0)
