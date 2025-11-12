@@ -10,7 +10,7 @@ from distutils.util import strtobool
 from statsmodels.distributions.empirical_distribution import ECDF
 from torch.utils.data import WeightedRandomSampler
 from einops import rearrange
-import torch.nn
+import torch.nn as nn
 import os
 
 class TSGDataset(Dataset):  # For generation task. Unified Univariate Generation Dataset
