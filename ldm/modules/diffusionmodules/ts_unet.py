@@ -22,6 +22,7 @@ from ldm.modules.diffusionmodules.util import (
 from ldm.modules.attention import Spatial1DTransformer
 from ldm.util import default
 from .util import Return
+from ldm.models.diffusion.conditioning_mlp import ConditioningMLP ##*
 
 
 # dummy replace
@@ -437,6 +438,10 @@ class UNetModel(nn.Module):
         use_spatial_transformer=False,    # custom transformer support
         transformer_depth=1,              # custom transformer support
         context_dim=None,                 # custom transformer support
+        text_dim=None, ##*
+        fusion_type='gated_add', ##*
+        num_domains=None,
+        num_classes=None,
         legacy=True,
         repre_emb_channels=32,
         latent_unit=6,
@@ -444,6 +449,7 @@ class UNetModel(nn.Module):
         cond_drop_prob=0.5,
         use_pam=False
     ):
+
         super().__init__()
         # if use_spatial_transformer:
         #     assert context_dim is not None, 'Fool!! You forgot to include the dimension of your cross-attention conditioning...'
@@ -483,7 +489,25 @@ class UNetModel(nn.Module):
         self.latent_unit = latent_unit
         self.latent_dim = repre_emb_channels
         self.use_pam = use_pam
-        
+
+        self.context_dim = context_dim ##*
+        self.text_dim = text_dim ##*
+        self.fusion_type = fusion_type ##*
+        self.num_domains = num_domains
+        self.num_classes = num_classes
+
+        ##*
+        if text_dim is not None and context_dim is not None:
+            self.conditioning_mlp = ConditioningMLP(
+                c_dim=context_dim,
+                text_dim=text_dim,
+                fusion_type=fusion_type,
+                num_domains=num_domains,
+                num_classes=num_classes
+            )
+        else:
+            self.conditioning_mlp = None
+        ##*
         time_embed_dim = model_channels * 4
         self.time_embed = nn.Sequential(
             linear(model_channels, time_embed_dim),
@@ -694,7 +718,8 @@ class UNetModel(nn.Module):
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
 
-    def _forward(self, x, timesteps=None, context=None, mask=None, y=None, cond_drop_prob=0, **kwargs):
+    def _forward(self, x, timesteps=None, context=None, mask=None,
+                 y=None, cond_drop_prob=0, text_embedding=None, **kwargs): ##*
         """
         Apply the model to an input batch.
         :param x: an [N x C x ...] Tensor of inputs.
@@ -708,54 +733,61 @@ class UNetModel(nn.Module):
             self.num_classes is not None
         ), "must specify y if and only if the model is class-conditional"
         bs, device = x.shape[0], x.device
+
         cond_drop_prob = default(cond_drop_prob, self.cond_drop_prob)
-        if context is not None:
-            c_num = context.shape[1]
-            
+        ##*
+        context_emb = context
+        if context_emb is not None:
+            c_num = context_emb.shape[1]
+
             if cond_drop_prob > 0:
-                keep_mask = prob_mask_like((bs, c_num, 1), 1 - cond_drop_prob, device = device)
-                null_classes_emb = repeat(self.null_classes_emb, '1 d -> b n d', b = bs, n = c_num)
-                context_emb = context * keep_mask + (~keep_mask) * null_classes_emb
-                
-            else:
-                context_emb = context
-        else:
-            context_emb = None
-        
-        hs = []
+                keep_mask = prob_mask_like((bs, c_num, 1), 1 - cond_drop_prob, device=device)
+                null_classes_emb = repeat(self.null_classes_emb, '1 d -> b n d', b=bs, n=c_num)
+                context_emb = context_emb * keep_mask + (~keep_mask) * null_classes_emb
+
+        if self.conditioning_mlp is not None and text_embedding is not None and context_emb is not None:
+            context_emb = context_emb.permute(0, 2, 1)  # [B, C, T]
+            context_emb = self.conditioning_mlp(context_emb, text_embedding)  # [B, C, T]
+            context_emb = context_emb.permute(0, 2, 1)  # [B, T, C]
+
         t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
         emb = self.time_embed(t_emb)
 
-        if self.num_classes is not None:
+        if self.num_classes is not None and y is not None:
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)
 
+        hs = []
         h = x.type(self.dtype)
-        k = 0
+
         for module in self.input_blocks:
             h = module(h, emb, context_emb, mask=mask)
             hs.append(h)
-            if k == 5:
-                a = 1
-            k += 1
+
         h = self.middle_block(h, emb, context_emb, mask=mask)
+
         for module in self.output_blocks:
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb, context_emb, mask=mask)
+
         h = h.type(x.dtype)
         pred = self.out(h)
+        ##*
         return Return(pred = pred)
 
-    def forward(self, x, timesteps=None, context=None, mask=None, y=None, cond_drop_prob=0, **kwargs):
-        out = self._forward(x, timesteps, context, mask, y, cond_drop_prob, **kwargs)
+    def forward(self, x, timesteps=None, context=None, mask=None, y=None,
+                cond_drop_prob=0, text_embedding=None, **kwargs): ##*
+        out = self._forward(x, timesteps, context, mask, y, cond_drop_prob, text_embedding=text_embedding, **kwargs) ##*
         return out
     
-    def forward_with_cfg(self, x, timesteps=None, context=None, y=None, cfg_scale=1,**kwargs):
-        model_out = self._forward(x=x, timesteps=timesteps, context=context, y=y, cond_drop_prob=0.,**kwargs)
+    def forward_with_cfg(self, x, timesteps=None, context=None, y=None,
+                         cfg_scale=1, text_embedding=None, **kwargs): ##*
+        model_out = self._forward(x=x, timesteps=timesteps, context=context, y=y, cond_drop_prob=0., text_embedding=text_embedding, **kwargs) ##*
+
         if cfg_scale == 1:
             return model_out
         
-        null_context_out = self._forward(x=x, timesteps=timesteps, context=context, y=y, cond_drop_prob=1.,**kwargs)
+        null_context_out = self._forward(x=x, timesteps=timesteps, context=context, y=y, cond_drop_prob=1., text_embedding=text_embedding, **kwargs)##*
         cfg_grad = model_out.pred - null_context_out.pred
         scaled_out = null_context_out.pred + cfg_scale * cfg_grad
        

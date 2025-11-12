@@ -6,7 +6,7 @@ import os, sys
 from pytorch_lightning.trainer import Trainer
 from utils.cli_utils import get_parser
 from utils.init_utils import init_model_data_trainer
-from utils.test_utils import test_model_with_dp, test_model_uncond, test_model_unseen
+from utils.test_utils import test_model_with_dp, test_model_uncond, test_model_unseen, test_model_with_dptext
 
 
 if __name__ == "__main__":
@@ -30,6 +30,6 @@ if __name__ == "__main__":
         if opt.uncond:
             test_model_uncond(model, data, trainer, opt, logdir)
         else:
-            test_model_with_dp(model, data, trainer, opt, logdir)
+            test_model_with_dptext(model, data, trainer, opt, logdir)
             #test_model_unseen(model, data, trainer, opt, logdir)
 

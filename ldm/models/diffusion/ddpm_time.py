@@ -25,6 +25,7 @@ from ldm.modules.ema import LitEma
 from ldm.modules.distributions.distributions import DiagonalGaussianDistribution
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim_time import DDIMSampler
+
 from ldm.modules.diffusionmodules.util import return_wrap
 import copy
 
@@ -530,6 +531,7 @@ class LatentDiffusion(DDPM):
         if bs is not None:
             x = x[:bs]
         x = x.to(self.device)
+        ###
         encoder_posterior = self.encode_first_stage(x)
         z = self.get_first_stage_encoding(encoder_posterior).detach()
 
@@ -568,6 +570,8 @@ class LatentDiffusion(DDPM):
             out.append(xc)
         if return_mask:
             out.append(mask)
+        ###
+            ###
         return out
 
     @torch.no_grad()
@@ -590,7 +594,20 @@ class LatentDiffusion(DDPM):
     def shared_step(self, batch, **kwargs):
         x, c = self.get_input(batch, self.first_stage_key)
         kwargs['data_key'] = batch['data_key'].to(self.device)
-        loss = self(x, c, **kwargs)
+
+        text_embedding = batch.get('text_embedding', None)
+        if text_embedding is not None:
+            if not isinstance(text_embedding, torch.Tensor):
+                text_embedding = torch.as_tensor(text_embedding)
+            text_embedding = text_embedding.to(self.device).long()
+
+
+
+
+
+
+
+        loss = self(x, c, text_embedding=text_embedding, **kwargs) ##*
         return loss
 
     def forward(self, x, c, *args, **kwargs):
@@ -605,7 +622,8 @@ class LatentDiffusion(DDPM):
         return self.p_losses(x, c, t, *args, **kwargs)
 
     def apply_model(self, x_noisy, t, cond, mask, cfg_scale=1, cond_drop_prob=None, 
-                    sampled_concept= None, sampled_index= None, sub_scale=None, **kwargs):
+                    sampled_concept= None, sampled_index= None, sub_scale=None,
+                    text_embedding=None, **kwargs): ##*
 
         if isinstance(cond, dict):
             # hybrid case, cond is exptected to be a dict
@@ -617,27 +635,55 @@ class LatentDiffusion(DDPM):
             cond = {key: cond, 'mask': mask}
         
         if cond_drop_prob is None:
-            x_recon = self.model.cfg_forward(x_noisy, t, cfg_scale=cfg_scale, sampled_concept = sampled_concept, sampled_index = sampled_index, sub_scale = sub_scale, **cond)
+            ###
+            x_recon = self.model.cfg_forward(
+                x_noisy,
+                t,
+                cfg_scale=cfg_scale,
+                sampled_concept = sampled_concept,
+                sampled_index = sampled_index,
+                sub_scale = sub_scale,
+                text_embedding=text_embedding, ##*
+                **cond
+            )
         else:
-            x_recon = self.model.forward(x_noisy, t, cond_drop_prob=cond_drop_prob, 
-                                            sampled_concept = sampled_concept, sampled_index = sampled_index, sub_scale = sub_scale, **cond)
-
+            ###
+            x_recon = self.model.forward(
+                x_noisy,
+                t,
+                cond_drop_prob=cond_drop_prob,
+                sampled_concept = sampled_concept,
+                sampled_index = sampled_index,
+                sub_scale = sub_scale,
+                text_embedding=text_embedding,  ##*
+                **cond
+            )
         return x_recon
 
     def _predict_eps_from_xstart(self, x_t, t, pred_xstart):
         return (extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - pred_xstart) / \
                extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
 
-    def p_losses(self, x_start, condmask, t, noise=None, data_key=None):
+    def p_losses(self, x_start, condmask, t, noise=None, data_key=None, text_embedding=None): ### ##*
         noise = default(noise, lambda: torch.randn_like(x_start))
+
         if condmask is not None:
             cond, mask = condmask
         else:
             cond = None
             mask = None
+
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
 
-        model_output = self.apply_model(x_noisy, t, cond, mask, cond_drop_prob=self.cond_drop_prob)
+        ###
+        model_output = self.apply_model(
+            x_noisy,
+            t,
+            cond,
+            mask,
+            cond_drop_prob=self.cond_drop_prob,
+            text_embedding=text_embedding ##*
+        )
 
         eps_pred = return_wrap(model_output, extract_into_tensor(self.shift_coef, t, x_start.shape))
 
@@ -838,13 +884,28 @@ class LatentDiffusion(DDPM):
                                   verbose=verbose, timesteps=timesteps, mask=mask, x0=x0,**kwargs)
 
     @torch.no_grad()
-    def sample_log(self,cond,batch_size,ddim, ddim_steps=20,**kwargs):
+    def sample_log(self,cond,batch_size,ddim, ddim_steps=20,**kwargs): ###
 
         if ddim:
+            ###
+
+
+
+
+
+
+
+
+
+
+
+
+
             ddim_sampler = DDIMSampler(self)
             shape = (self.channels, self.seq_len)
             samples, intermediates =ddim_sampler.sample(S = ddim_steps,batch_size = batch_size,
                                                     shape = shape,conditioning = cond,verbose=False,**kwargs)
+
 
         else:
             samples, intermediates = self.sample(cond=cond, batch_size=batch_size,
@@ -865,6 +926,10 @@ class LatentDiffusion(DDPM):
                                            force_c_encode=True,
                                            return_original_cond=True,
                                            bs=N, return_mask=True)
+        ###
+
+
+
         N = min(x.shape[0], N)
         n_row = min(x.shape[0], n_row)
         log["inputs"] = x  # batchsize, channel, window
@@ -920,27 +985,38 @@ class DiffusionWrapper(pl.LightningModule):
         self.diffusion_model = instantiate_from_config(diff_model_config)
         self.conditioning_key = conditioning_key
         assert self.conditioning_key in [None, 'concat', 'crossattn', 'hybrid', 'adm']
-    
     def parameters(self):
         return self.diffusion_model.parameters()
-
-    def forward(self, x, t, c_crossattn: list = None, cond_drop_prob = 0., mask=None, **kwargs):
-        
+    def forward(self, x, t, c_crossattn: list = None, cond_drop_prob = 0., mask=None, text_embedding=None, **kwargs): ### ##*
         if (c_crossattn is not None) and (not None in c_crossattn):
             cc = torch.cat(c_crossattn, 1)
         else:
             cc = None
-        out = self.diffusion_model(x, t, context=cc, mask=mask, cond_drop_prob=cond_drop_prob)
-        
+        ###
+        out = self.diffusion_model(
+            x,
+            t,
+            context=cc,
+            mask=mask,
+            cond_drop_prob=cond_drop_prob,
+            text_embedding=text_embedding ##*
+        )
         return out
         
-    def cfg_forward(self, x, t, c_crossattn: list = None, mask=None, **kwargs):
-        
+    def cfg_forward(self, x, t, c_crossattn: list = None, mask=None, text_embedding=None, **kwargs): ##*
         if (c_crossattn is not None) and (not None in c_crossattn):
             cc = torch.cat(c_crossattn, 1)
         else:
             cc = None
-        out = self.diffusion_model.forward_with_cfg(x, t, context=cc, mask=mask, **kwargs)
-        
+
+        out = self.diffusion_model.forward_with_cfg(
+            x,
+            t,
+            context=cc,
+            mask=mask,
+            text_embedding=text_embedding, ##*
+            **kwargs
+        )
+        ###
         return out
 

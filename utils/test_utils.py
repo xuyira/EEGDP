@@ -66,7 +66,95 @@ def test_model_with_dp(model, data, trainer, opt, logdir):
         all_metrics = run_metrics(data_name=dataset, seq_len=seq_len, model_name=tmp_name, gen_data=generated_data, scale='zscore', exist_dict=all_metrics)
     print(all_metrics)
     save_pkl(all_metrics, Path(logdir) / 'metric_dict.pkl')
-    
+
+def test_model_with_dptext(model, data, trainer, opt, logdir, use_pam=True, use_text=True):
+    """
+    Testing with domain prompts (dp), optionally text-conditioned.
+    """
+    # === Load best checkpoint === #
+    if trainer.callbacks[-1].best_model_path:
+        best_ckpt_path = trainer.callbacks[-1].best_model_path
+        print(f"[TEST DP] Loading best model from {best_ckpt_path}")
+        model.init_from_ckpt(best_ckpt_path)
+
+    model = model.cuda().eval()
+
+    save_path = Path(logdir) / 'generated_samples'
+    save_path.mkdir(exist_ok=True, parents=True)
+
+    seq_len = data.window
+    num_dp = 50
+    all_metrics = {}
+
+    for dataset in data.norm_train_dict.keys():
+        print(f"\n[Processing dataset]: {dataset}")
+
+        dataset_data = TSGtextDataset(
+            {dataset: data.norm_train_dict[dataset]},
+            {dataset: data.norm_text_train_dict[dataset]} if use_text else None
+        )
+
+        dataset_samples = []
+        text_embeddings = []
+
+        if use_pam:
+            for idx in np.random.randint(len(dataset_data), size=num_dp):
+                sample = dataset_data[idx]
+                dataset_samples.append(sample['context'])
+                if use_text:
+                    text_embeddings.append(sample['text_embedding'])
+
+            dataset_samples = np.vstack(dataset_samples)
+            dataset_samples = torch.tensor(dataset_samples).to('cuda').float().unsqueeze(1)
+
+            if use_text:
+                text_embeddings = np.vstack(text_embeddings)
+                text_embeddings = torch.tensor(text_embeddings).to('cuda').long()
+
+        else:
+            dataset_samples = None
+            text_embeddings = None
+
+        # === Get Conditioning === #
+        c, mask = model.get_learned_conditioning(dataset_samples, return_mask=True)
+
+        repeats = int(100 / (dataset_samples.shape[0] if dataset_samples is not None else 1)) if not opt.debug else 1
+        cond = torch.repeat_interleave(c, repeats, dim=0)
+        mask_repeat = torch.repeat_interleave(mask, repeats, dim=0) if mask is not None else None
+        if use_text:
+            text_embeddings = torch.repeat_interleave(text_embeddings, repeats, dim=0)
+
+        all_gen = []
+        for _ in range(2 if not opt.debug else 1):
+            samples, _ = model.sample_log(
+                cond=cond,
+                batch_size=100,
+                ddim=False,
+                cfg_scale=1,
+                mask=mask_repeat,
+                text_embedding=text_embeddings if use_text else None
+            )
+
+            norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
+            inv_samples = data.inverse_transform(norm_samples, data_name=dataset)
+            all_gen.append(inv_samples)
+
+        generated_data = np.vstack(all_gen).transpose(0, 2, 1)
+
+        tmp_name = f'{dataset}_{seq_len}_generation_with_text' if use_text else f'{dataset}_{seq_len}_generation'
+        np.save(save_path / f'{tmp_name}.npy', generated_data)
+
+        all_metrics = run_metrics(
+            data_name=dataset,
+            seq_len=seq_len,
+            model_name=tmp_name,
+            gen_data=generated_data,
+            scale='zscore',
+            exist_dict=all_metrics
+        )
+
+    print(f"\n[Metrics Summary]: {all_metrics}")
+    save_pkl(all_metrics, save_path / 'metric_dict.pkl')
 
 def test_model_uncond(model, data, trainer, opt, logdir):
     if trainer.callbacks[-1].best_model_path:
