@@ -337,8 +337,8 @@ class TSGtextDataModule(pl.LightningDataModule):
 
         self.domain_to_idx = domain_map
         self.class_to_idx = class_map
-        self.num_domains = len(domain_map)
-        self.num_classes = len(class_map)
+        self.num_text_domains = len(domain_map)
+        self.num_text_classes = len(class_map)
 
     def split_train_val(self, data: np.ndarray):
         # By default, data are sliced into non-overlapped sequences.

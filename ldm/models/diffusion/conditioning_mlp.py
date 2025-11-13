@@ -10,7 +10,7 @@ class ConditioningMLP(nn.Module):
     Supports 'add', 'concat', and 'gated_add' fusion modes.
     """
 
-    def __init__(self, c_dim, text_dim, fusion_type='gated_add', pool_type='mean', num_domains=None, num_classes=None):
+    def __init__(self, c_dim, text_dim, fusion_type='gated_add', pool_type='mean', num_text_domains=None, num_text_classes=None):
         """
         Args:
             c_dim (int): The channel dimension of `c` (e.g., 64)
@@ -33,8 +33,8 @@ class ConditioningMLP(nn.Module):
         self.domain_emb_dim = domain_emb_dim
         self.class_emb_dim = class_emb_dim
 
-        self.domain_embedding = nn.Embedding(num_domains, domain_emb_dim)
-        self.class_embedding = nn.Embedding(num_classes, class_emb_dim)
+        self.domain_embedding = nn.Embedding(num_text_domains, domain_emb_dim)
+        self.class_embedding = nn.Embedding(num_text_classes, class_emb_dim)
 
         # Text embedding MLP projection: text_dim -> c_dim
         self.text_mlp = nn.Sequential(

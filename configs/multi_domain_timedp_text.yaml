@@ -48,8 +48,8 @@ model:
         latent_unit: 1
         use_spatial_transformer: true
         use_pam: true
-        num_domains: 2
-        num_classes: 4
+        num_text_domains: 2
+        num_text_classes: 4
         text_dim: 64
 
     first_stage_config:  # no first stage model for ts data

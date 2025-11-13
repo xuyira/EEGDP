@@ -503,8 +503,8 @@ class UNetModel(nn.Module):
                 c_dim=context_dim,
                 text_dim=text_dim,
                 fusion_type=fusion_type,
-                num_domains=num_domains,
-                num_classes=num_classes
+                num_text_domains=num_text_domains,
+                num_text_classes=num_text_classes
             )
         else:
             self.conditioning_mlp = None
