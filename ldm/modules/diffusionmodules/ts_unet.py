@@ -426,6 +426,7 @@ class UNetModel(nn.Module):
         channel_mult=(1, 2, 4, 8),
         conv_resample=True,
         dims=2,
+        num_classes=None,
         use_checkpoint=False,
         use_fp16=False,
         num_heads=-1,
@@ -439,8 +440,8 @@ class UNetModel(nn.Module):
         context_dim=None,                 # custom transformer support
         text_dim=None, ##*
         fusion_type='gated_add', ##*
-        num_domains=None,
-        num_classes=None,
+        num_text_domains=None,
+        num_text_classes=None,
         legacy=True,
         repre_emb_channels=32,
         latent_unit=6,
@@ -487,12 +488,14 @@ class UNetModel(nn.Module):
         self.latent_unit = latent_unit
         self.latent_dim = repre_emb_channels
         self.use_pam = use_pam
+        self.num_classes = num_classes
 
         self.context_dim = context_dim ##*
         self.text_dim = text_dim ##*
         self.fusion_type = fusion_type ##*
-        self.num_domains = num_domains
-        self.num_classes = num_classes
+
+        self.num_text_domains = num_text_domains
+        self.num_text_classes = num_text_classes
 
         ##*
         if text_dim is not None and context_dim is not None:
