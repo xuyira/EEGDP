@@ -290,6 +290,10 @@ class TSGtextDataModule(pl.LightningDataModule):
                              'minmax'], f"Normalize({normalize}) must be in (zscore, robust_iqr, robust_mad, pit)."
         self.normalize = normalize
 
+        if "input_channels" in kwargs:
+            kwargs = dict(kwargs)
+            kwargs.pop("input_channels")
+
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
