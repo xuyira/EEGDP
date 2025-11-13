@@ -68,14 +68,14 @@ data:
   target: ldm.data.tsg_dataset.TSGtextDataModule
   params:
     data_path_dict:
-      bci2a_sub1_cls1: "{DATA_ROOT}/bci2a_sub1_cls1_{SEQ_LEN}_train.npy"
-      bci2a_sub1_cls2: "{DATA_ROOT}/bci2a_sub1_cls2_{SEQ_LEN}_train.npy"
-      bci2a_sub1_cls3: "{DATA_ROOT}/bci2a_sub1_cls3_{SEQ_LEN}_train.npy"
-      bci2a_sub1_cls4: "{DATA_ROOT}/bci2a_sub1_cls4_{SEQ_LEN}_train.npy"
-      bci2a_sub2_cls1: "{DATA_ROOT}/bci2a_sub2_cls1_{SEQ_LEN}_train.npy"
-      bci2a_sub2_cls2: "{DATA_ROOT}/bci2a_sub2_cls2_{SEQ_LEN}_train.npy"
-      bci2a_sub2_cls3: "{DATA_ROOT}/bci2a_sub2_cls3_{SEQ_LEN}_train.npy"
-      bci2a_sub2_cls4: "{DATA_ROOT}/bci2a_sub2_cls4_{SEQ_LEN}_train.npy"
+      bci2a_sub1_cls1: "{DATA_ROOT}/bci2a_sub1_cls1_{SEQ_LEN}_train.csv"
+      bci2a_sub1_cls2: "{DATA_ROOT}/bci2a_sub1_cls2_{SEQ_LEN}_train.csv"
+      bci2a_sub1_cls3: "{DATA_ROOT}/bci2a_sub1_cls3_{SEQ_LEN}_train.csv"
+      bci2a_sub1_cls4: "{DATA_ROOT}/bci2a_sub1_cls4_{SEQ_LEN}_train.csv"
+      bci2a_sub2_cls1: "{DATA_ROOT}/bci2a_sub2_cls1_{SEQ_LEN}_train.csv"
+      bci2a_sub2_cls2: "{DATA_ROOT}/bci2a_sub2_cls2_{SEQ_LEN}_train.csv"
+      bci2a_sub2_cls3: "{DATA_ROOT}/bci2a_sub2_cls3_{SEQ_LEN}_train.csv"
+      bci2a_sub2_cls4: "{DATA_ROOT}/bci2a_sub2_cls4_{SEQ_LEN}_train.csv"
       #bci2a_sub3_cls1: "{DATA_ROOT}/bci2a_sub3_cls1_{SEQ_LEN}_train.npy"
       #bci2a_sub3_cls2: "{DATA_ROOT}/bci2a_sub3_cls2_{SEQ_LEN}_train.npy"
       #bci2a_sub3_cls3: "{DATA_ROOT}/bci2a_sub3_cls3_{SEQ_LEN}_train.npy"

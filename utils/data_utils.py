@@ -16,14 +16,14 @@ else:
     print("DATA_ROOT not exist or not defined!")
 
 test_data_map = {
-    'bci2a_sub1_cls1': 'bci2a_sub1_cls1_{seq_len}_val.npy',
-    'bci2a_sub1_cls2': 'bci2a_sub1_cls2_{seq_len}_val.npy',
-    'bci2a_sub1_cls3': 'bci2a_sub1_cls3_{seq_len}_val.npy',
-    'bci2a_sub1_cls4': 'bci2a_sub1_cls4_{seq_len}_val.npy',
-    'bci2a_sub2_cls1': 'bci2a_sub2_cls1_{seq_len}_val.npy',
-    'bci2a_sub2_cls2': 'bci2a_sub2_cls2_{seq_len}_val.npy',
-    'bci2a_sub2_cls3': 'bci2a_sub2_cls3_{seq_len}_val.npy',
-    'bci2a_sub2_cls4': 'bci2a_sub2_cls4_{seq_len}_val.npy',
+    'bci2a_sub1_cls1': 'bci2a_sub1_cls1_{seq_len}_val.csv',
+    'bci2a_sub1_cls2': 'bci2a_sub1_cls2_{seq_len}_val.csv',
+    'bci2a_sub1_cls3': 'bci2a_sub1_cls3_{seq_len}_val.csv',
+    'bci2a_sub1_cls4': 'bci2a_sub1_cls4_{seq_len}_val.csv',
+    'bci2a_sub2_cls1': 'bci2a_sub2_cls1_{seq_len}_val.csv',
+    'bci2a_sub2_cls2': 'bci2a_sub2_cls2_{seq_len}_val.csv',
+    'bci2a_sub2_cls3': 'bci2a_sub2_cls3_{seq_len}_val.csv',
+    'bci2a_sub2_cls4': 'bci2a_sub2_cls4_{seq_len}_val.csv',
     'bci2a_sub3_cls1': 'bci2a_sub3_cls1_{seq_len}_val.npy',
     'bci2a_sub3_cls2': 'bci2a_sub3_cls2_{seq_len}_val.npy',
     'bci2a_sub3_cls3': 'bci2a_sub3_cls3_{seq_len}_val.npy',
