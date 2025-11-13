@@ -125,8 +125,8 @@ data:
     reweight: False #True
     input_channels: 1
     domain_to_idx:
-      bci2a_sub1: 0
-      bci2a_sub2: 1
+      sub1: 0
+      sub2: 1
     class_to_idx:
       cls1: 0
       cls2: 1
