@@ -70,7 +70,7 @@ test_data_map = {
 
 def test_data_loading(data_name, seq_len, stride=1, univar=False):
     data_path = prefix / test_data_map[data_name].format(seq_len=seq_len, stride=stride)
-    ori_data = np.load(data_path) # (n, t, c)
+    ori_data = np.load(data_path, allow_pickle=True) # (n, t, c)
     if univar:
         ori_data = rearrange(ori_data, 'n t c -> (n c) t 1')
     return ori_data
