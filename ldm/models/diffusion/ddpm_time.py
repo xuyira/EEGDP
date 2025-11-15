@@ -507,7 +507,13 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError(f"encoder_posterior of type '{type(encoder_posterior)}' not yet implemented")
         return self.scale_factor * z
 
-    def get_learned_conditioning(self, c, return_mask=False):
+    def get_learned_conditioning(self, c, return_mask=False, compute_mask=True):
+        """
+        Args:
+            c: 输入条件
+            return_mask: 是否返回mask
+            compute_mask: 是否计算mask（如果为False，则只返回原始原型，不计算mask）
+        """
         if self.cond_stage_forward is None:
             if hasattr(self.cond_stage_model, 'encode') and callable(self.cond_stage_model.encode):
                 c = self.cond_stage_model.encode(c)
@@ -516,10 +522,17 @@ class LatentDiffusion(DDPM):
             elif self.cond_stage_model is None:
                 c, mask = None, None
             else:
-                c, mask = self.cond_stage_model(c)
+                # 如果cond_stage_model有forward方法且支持return_mask参数
+                if hasattr(self.cond_stage_model, 'forward') and compute_mask:
+                    c, mask = self.cond_stage_model(c, return_mask=True)
+                elif hasattr(self.cond_stage_model, 'forward') and not compute_mask:
+                    c, mask = self.cond_stage_model(c, return_mask=False)
+                else:
+                    c, mask = self.cond_stage_model(c)
         else:
             assert hasattr(self.cond_stage_model, self.cond_stage_forward)
             c = getattr(self.cond_stage_model, self.cond_stage_forward)(c)
+            mask = None
         if return_mask:
             return c, mask
         return c
@@ -615,7 +628,12 @@ class LatentDiffusion(DDPM):
         if self.model.conditioning_key is not None:
             assert c is not None
             if self.cond_stage_trainable:
-                c = self.get_learned_conditioning(c, return_mask=True)
+                # 如果使用text_embedding，不计算mask，在apply_model中融合后再计算
+                text_embedding = kwargs.get('text_embedding', None)
+                if text_embedding is not None:
+                    c = self.get_learned_conditioning(c, return_mask=True, compute_mask=False)
+                else:
+                    c = self.get_learned_conditioning(c, return_mask=True, compute_mask=True)
             if self.shorten_cond_schedule:  # TODO: drop this option
                 tc = self.cond_ids[t].to(self.device)
                 c = self.q_sample(x_start=c, t=tc, noise=torch.randn_like(c.float()))
@@ -625,6 +643,45 @@ class LatentDiffusion(DDPM):
                     sampled_concept= None, sampled_index= None, sub_scale=None,
                     text_embedding=None, **kwargs): ##*
 
+        # 如果text_embedding存在，先融合文本和原型，再基于融合后的原型计算权重
+        # 注意：如果compute_mask=False，mask可能是None，但如果有text_embedding，会在下面重新计算new_mask
+        new_mask = mask
+        if text_embedding is not None and cond is not None and hasattr(self, 'cond_stage_model') and \
+           hasattr(self.cond_stage_model, 'compute_mask_from_prototypes') and \
+           hasattr(self.model, 'conditioning_mlp'):
+            # cond是原始原型 [B, num_latents, latent_dim] 或 list of [B, num_latents, latent_dim]
+            # 先融合文本和原型
+            if isinstance(cond, list):
+                cond_list = cond
+            else:
+                cond_list = [cond]
+            
+            # 对每个cond进行融合
+            fused_prototypes_list = []
+            for c in cond_list:
+                # c: [B, num_latents, latent_dim]
+                # 融合文本和原型
+                # 需要将c转换为 [B, C, T] 格式，其中C=latent_dim, T=num_latents
+                B, num_latents, latent_dim = c.shape
+                c_permuted = c.permute(0, 2, 1)  # [B, latent_dim, num_latents]
+                # 融合
+                fused = self.model.conditioning_mlp(c_permuted, text_embedding)  # [B, latent_dim, num_latents]
+                fused = fused.permute(0, 2, 1)  # [B, num_latents, latent_dim]
+                fused_prototypes_list.append(fused)
+            
+            # 基于融合后的原型计算新权重
+            if len(fused_prototypes_list) == 1:
+                new_mask = self.cond_stage_model.compute_mask_from_prototypes(fused_prototypes_list[0])
+            else:
+                # 如果有多个cond，对第一个计算权重
+                new_mask = self.cond_stage_model.compute_mask_from_prototypes(fused_prototypes_list[0])
+            
+            # 更新cond为融合后的原型
+            if len(fused_prototypes_list) == 1:
+                cond = fused_prototypes_list[0]
+            else:
+                cond = fused_prototypes_list
+        
         if isinstance(cond, dict):
             # hybrid case, cond is exptected to be a dict
             pass
@@ -632,7 +689,7 @@ class LatentDiffusion(DDPM):
             if not isinstance(cond, list):
                 cond = [cond]
             key = 'c_concat' if self.model.conditioning_key == 'concat' else 'c_crossattn'
-            cond = {key: cond, 'mask': mask}
+            cond = {key: cond, 'mask': new_mask}
         
         if cond_drop_prob is None:
             ###
@@ -643,7 +700,7 @@ class LatentDiffusion(DDPM):
                 sampled_concept = sampled_concept,
                 sampled_index = sampled_index,
                 sub_scale = sub_scale,
-                text_embedding=text_embedding, ##*
+                text_embedding=None,  # 已经融合，不再需要text_embedding
                 **cond
             )
         else:
@@ -655,7 +712,7 @@ class LatentDiffusion(DDPM):
                 sampled_concept = sampled_concept,
                 sampled_index = sampled_index,
                 sub_scale = sub_scale,
-                text_embedding=text_embedding,  ##*
+                text_embedding=None,  # 已经融合，不再需要text_embedding
                 **cond
             )
         return x_recon

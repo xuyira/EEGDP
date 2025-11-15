@@ -104,17 +104,41 @@ class DomainUnifiedPrototyper(nn.Module):
             View((-1, flatten_dim)),                  # batch_size x 2048
             nn.Linear(flatten_dim, self.num_latents),
         )
+        # 添加基于融合后原型计算权重的网络
+        self.mask_from_prototypes_ffn = nn.Sequential(
+            nn.Linear(self.latent_dim, self.latent_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.latent_dim, 1),
+        )
         self.sigmoid = nn.Sigmoid()
             
-    def forward(self, x): #x:batch_size x 1 x dim
+    def forward(self, x, return_mask=True): #x:batch_size x 1 x dim
         b = x.shape[0] 
         h = self.share_encoder(x) #b x dim x window/4
-        mask = None
 
         latents = repeat(self.latents, 'n d -> b n d', b = b)
-        mask_logit = self.mask_ffn(h) #把h映射到每个sample对n个原型的n个logit (b, num_latents)
-        mask = mask_logit  # soft assign
+        if return_mask:
+            mask_logit = self.mask_ffn(h) #把h映射到每个sample对n个原型的n个logit (b, num_latents)
+            mask = mask_logit  # soft assign
+        else:
+            mask = None
                     
         out = latents  #  mask
         return out, mask
+    
+    def compute_mask_from_prototypes(self, prototypes):
+        """
+        基于融合后的原型特征计算权重
+        Args:
+            prototypes: [B, num_latents, latent_dim] 融合后的原型特征
+        Returns:
+            mask: [B, num_latents] 权重
+        """
+        # 对每个原型计算权重，然后归一化
+        # prototypes: [B, num_latents, latent_dim]
+        B, num_latents, latent_dim = prototypes.shape
+        # 对每个原型计算一个标量权重
+        mask_logits = self.mask_from_prototypes_ffn(prototypes)  # [B, num_latents, 1]
+        mask = mask_logits.squeeze(-1)  # [B, num_latents]
+        return mask
         
