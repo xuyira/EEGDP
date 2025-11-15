@@ -6,7 +6,7 @@ import torch
 from pathlib import Path
 from utils.pkl_utils import save_pkl
 from metrics.metrics_sets import run_metrics, calculate_one
-from ldm.data.tsg_dataset import TSGDataset
+from ldm.data.tsg_dataset import TSGDataset, TSGtextDataset
 import os
 
 data_root = os.environ['DATA_ROOT']
@@ -117,7 +117,13 @@ def test_model_with_dptext(model, data, trainer, opt, logdir, use_pam=True, use_
 
         # === Get Conditioning === #
         c, mask = model.get_learned_conditioning(dataset_samples, return_mask=True)
-
+        """
+        # 如果使用text_embedding，不计算mask，在apply_model中融合后再计算
+        if use_text:
+            c, mask = model.get_learned_conditioning(dataset_samples, return_mask=True, compute_mask=False)
+        else:
+            c, mask = model.get_learned_conditioning(dataset_samples, return_mask=True, compute_mask=True)
+        """
         repeats = int(100 / (dataset_samples.shape[0] if dataset_samples is not None else 1)) if not opt.debug else 1
         cond = torch.repeat_interleave(c, repeats, dim=0)
         mask_repeat = torch.repeat_interleave(mask, repeats, dim=0) if mask is not None else None
