@@ -29,7 +29,7 @@ if __name__ == "__main__":
     if not opt.no_test and not trainer.interrupted:
         if opt.uncond:
             test_model_uncond(model, data, trainer, opt, logdir)
-        elif opt.text:
+        elif opt.use_text:
             test_model_with_dptext(model, data, trainer, opt, logdir)
             test_model_unseen(model, data, trainer, opt, logdir)
         else:
