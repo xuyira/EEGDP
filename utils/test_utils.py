@@ -235,11 +235,9 @@ def merge_dicts(dicts):
 def test_model_unseen(model, data, trainer, opt, logdir):
     all_metrics = {}
     seq_len = opt.seq_len
-    for data_name in ['stock', 'web']:
+    for data_name in ['bci2a_sub3_cls1', 'bci2a_sub4_cls2']:
         data_result_dicts = []
-        uni_ori_data = np.load(f'{data_root}/ts_data/new_zero_shot_data/{data_name}_{seq_len}_test_sample.npy')
-        if data_name == 'web':
-            uni_ori_data = uni_ori_data[uni_ori_data<np.percentile(uni_ori_data,99)]
+        uni_ori_data = np.load(f'{data_root}/few_shot_data/{data_name}_{seq_len}_test_sample.npy')
         uni_data_mean, uni_data_std = np.mean(uni_ori_data), np.std(uni_ori_data)
         uni_data_sub, uni_data_div = uni_data_mean, uni_data_std + 1e-7
         uni_scaled_ori = (uni_ori_data - uni_data_sub) / uni_data_div
@@ -247,12 +245,12 @@ def test_model_unseen(model, data, trainer, opt, logdir):
 
         scaled_ori = uni_scaled_ori
         
-        total_samples = 2000
-        for k in [3, 10, 100]: 
-            k_samples = np.load(f'{data_root}/ts_data/new_zero_shot_data/{data_name}_{seq_len}_k_{k}_sample.npy')
+        total_samples = 100
+        for k in [3, 10]: 
+            k_samples = np.load(f'{data_root}/few_shot_data/{data_name}_{seq_len}_{k}_samples.npy')
             for i in range(1):
                 gen_data, _ = zero_shot_k_repeat(k_samples, model=model, train_data_module=data, num_gen_samples=total_samples)
-                np.save(logdir/f"generated_samples/{data_name}_{seq_len}_k{k}_repeat_gen.npy", gen_data)
+                np.save(logdir/f"generated_samples/{data_name}_{seq_len}_{k}_repeat_gen.npy", gen_data)
                 this_metrics = calculate_one(gen_data.squeeze(), scaled_ori.squeeze(), '', i, f"{data_name}_{k}", seq_len, uni_data_sub, uni_data_div, total_samples)
                 data_result_dicts.append(this_metrics)
                 
