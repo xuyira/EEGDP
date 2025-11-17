@@ -109,12 +109,13 @@ class DomainUnifiedPrototyper(nn.Module):
     def forward(self, x): #x:batch_size x 1 x dim
         b = x.shape[0] 
         h = self.share_encoder(x) #b x dim x window/4
-        mask = None
-
         latents = repeat(self.latents, 'n d -> b n d', b = b)
         mask_logit = self.mask_ffn(h) #把h映射到每个sample对n个原型的n个logit (b, num_latents)
-        mask = mask_logit  # soft assign
-                    
-        out = latents  #  mask
+        weights = self.sigmoid(mask_logit)  # (b, n)
+        # normalize to avoid scale drift; keep behavior stable
+        weights = weights / (weights.sum(dim=1, keepdim=True) + 1e-8)  # (b, n)
+        # weighted sum over latents dimension -> (b, d)
+        out = (weights[:, :, None] * latents).sum(dim=1, keepdim=True)  # (b, 1, d)
+        mask = None
         return out, mask
         

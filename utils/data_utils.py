@@ -70,7 +70,28 @@ test_data_map = {
 
 def test_data_loading(data_name, seq_len, stride=1, univar=False):
     data_path = prefix / test_data_map[data_name].format(seq_len=seq_len, stride=stride)
-    ori_data = np.load(data_path) # (n, t, c)
+    suffix = Path(data_path).suffix.lower()
+    if suffix == '.npy':
+        # Support arrays saved with objects as well
+        ori_data = np.load(data_path, allow_pickle=True)
+    elif suffix == '.csv':
+        # CSV shape: (n, T+1), last column is text. Keep first T numeric columns.
+        try:
+            df = pd.read_csv(data_path)
+        except Exception:
+            df = pd.read_csv(data_path, header=None)
+        # Drop the last column (text)
+        if df.shape[1] < 2:
+            raise ValueError(f"CSV expected at least 2 columns (T+1), got {df.shape[1]} in {data_path}")
+        value_df = df.iloc[:, :-1].copy()
+        # Coerce to numeric
+        for col in value_df.columns:
+            value_df[col] = pd.to_numeric(value_df[col], errors='coerce')
+        arr = np.nan_to_num(value_df.to_numpy(), nan=0.0)
+        # Shape to (n, t, 1)
+        ori_data = arr[:, :, None]
+    else:
+        raise ValueError(f"Unsupported file extension for {data_path}")
     if univar:
         ori_data = rearrange(ori_data, 'n t c -> (n c) t 1')
     return ori_data

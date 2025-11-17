@@ -13,3 +13,5 @@ results/
 *.Identifier
 *.log
 *.pdf
+*.pkl
+

@@ -30,6 +30,7 @@ def get_parser(**parser_kwargs):
     parser.add_argument("-sl","--seq_len", type=int, const=True, default=24,nargs="?", help="sequence length")
     parser.add_argument("-uc","--uncond", action='store_true', help="unconditional generation")
     parser.add_argument("-up","--use_pam", action='store_true', help="use prototype")
+    parser.add_argument("-ut","--use_text", action='store_true', help="use text-conditioned testing")
     parser.add_argument("-bs","--batch_size", type=int, const=True, default=128,nargs="?", help="batch_size")
     parser.add_argument("-nl","--num_latents", type=int, const=True, default=16,nargs="?", help="number of prototypes")
     parser.add_argument("-lr","--overwrite_learning_rate", type=float, const=True, default=None, nargs="?", help="learning rate")
