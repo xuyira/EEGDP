@@ -251,7 +251,7 @@ def test_model_unseen(model, data, trainer, opt, logdir):
             for i in range(1):
                 gen_data, _ = zero_shot_k_repeat(k_samples, model=model, train_data_module=data, num_gen_samples=total_samples)
                 np.save(logdir/f"generated_samples/{data_name}_{seq_len}_{k}_repeat_gen.npy", gen_data)
-                this_metrics = calculate_one(gen_data.squeeze(), scaled_ori.squeeze(), '', i, f"{data_name}_{k}", seq_len, uni_data_sub, uni_data_div, total_samples)
+                this_metrics = calculate_one(gen_data, scaled_ori, '', i, f"{data_name}_{k}", seq_len, uni_data_sub, uni_data_div, total_samples)
                 data_result_dicts.append(this_metrics)
                 
 

@@ -34,6 +34,6 @@ if __name__ == "__main__":
             # TODO: add test_model_with_onlytext
             #test_model_unseen(model, data, trainer, opt, logdir)
         else:
+            test_model_unseen(model, data, trainer, opt, logdir)
             test_model_with_dp(model, data, trainer, opt, logdir)
-            #test_model_unseen(model, data, trainer, opt, logdir)
 
