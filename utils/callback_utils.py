@@ -223,6 +223,9 @@ class CUDACallback(Callback):
         
 def prepare_trainer_configs(nowname, logdir, opt, lightning_config, ckptdir, model, now, cfgdir, config, trainer_opt):
     trainer_kwargs = dict()
+
+    # Get wandb entity from environment variable (if set)
+    wandb_entity = os.environ.get('WANDB_ENTITY', None)
     
     # default logger configs
     default_logger_cfgs = {
@@ -238,6 +241,9 @@ def prepare_trainer_configs(nowname, logdir, opt, lightning_config, ckptdir, mod
         }
     }
     
+    # Add entity if specified via environment variable
+    if wandb_entity:
+        default_logger_cfgs["wandb"]["params"]["entity"] = wandb_entity
     default_logger_cfg = default_logger_cfgs["wandb"]
     if "logger" in lightning_config:
         logger_cfg = lightning_config.logger
