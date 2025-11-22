@@ -34,7 +34,6 @@ def get_parser(**parser_kwargs):
     parser.add_argument("-bs","--batch_size", type=int, const=True, default=128,nargs="?", help="batch_size")
     parser.add_argument("-nl","--num_latents", type=int, const=True, default=16,nargs="?", help="number of prototypes")
     parser.add_argument("-lr","--overwrite_learning_rate", type=float, const=True, default=None, nargs="?", help="learning rate")
-    parser.add_argument("--wandb_entity", type=str, default=None, help="wandb entity (username or team name) to use for logging")
     
     return parser
 

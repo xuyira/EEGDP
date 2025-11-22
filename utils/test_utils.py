@@ -215,8 +215,13 @@ def zero_shot_k_repeat(samples, model, train_data_module, num_gen_samples=1000):
     
     cond = torch.repeat_interleave(c, repeats, dim=0)
     cond = torch.cat([cond, c[:extra]], dim=0)
-    mask_repeat = torch.repeat_interleave(mask, repeats, dim=0)
-    mask_repeat = torch.cat([mask_repeat, mask[:extra]], dim=0)
+    
+    # Handle mask being None
+    if mask is None:
+        mask_repeat = None
+    else:
+        mask_repeat = torch.repeat_interleave(mask, repeats, dim=0)
+        mask_repeat = torch.cat([mask_repeat, mask[:extra]], dim=0)
     
     samples, z_denoise_row = model.sample_log(cond=cond, batch_size=cond.shape[0], ddim=False, cfg_scale=1, mask=mask_repeat)
     norm_samples = model.decode_first_stage(samples).detach().cpu().numpy()
